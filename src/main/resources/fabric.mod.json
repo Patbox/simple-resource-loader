@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "simpleresourceloader",
+  "version": "${version}",
+  "name": "Simple Resource Loader",
+  "description": "Simple global/modpack resource pack and data pack loader. No configuration, just few folders.",
+  "authors": [
+    "Patbox"
+  ],
+  "contact": {
+    "homepage": "https://pb4.eu",
+    "sources": "https://github.com/Patbox/simple-resource-loader"
+  },
+  "license": "LGPLv3",
+  "environment": "*",
+  "icon": "assets/simpleresourceloader/icon.png",
+  "entrypoints": {
+    "main": [
+      "eu.pb4.simpleresourceloader.ModInit"
+    ]
+  },
+  "mixins": [
+    "simpleresourceloader.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": ">=1.21"
+  }
+}

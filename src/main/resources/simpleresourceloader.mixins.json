@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "eu.pb4.simpleresourceloader.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ResourcePackManagerMixin",
+    "VanillaResourcePackProviderAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
