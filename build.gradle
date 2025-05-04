@@ -1,7 +1,10 @@
 plugins {
-	id 'fabric-loom' version '1.6.+'
+	//id("fish.cichlidmc.cichlid-gradle")
+	id 'java'
 	id 'maven-publish'
 	id "com.modrinth.minotaur" version "2.+"
+	id "org.spongepowered.gradle.vanilla" version "0.2.1-20241107.194040-91"
+
 }
 
 sourceCompatibility = JavaVersion.VERSION_21
@@ -12,21 +15,71 @@ version = project.mod_version + "+" + project.minecraft_version
 group = project.maven_group
 
 repositories {
+	mavenCentral()
+	mavenCentral()
+	maven { url = "https://mvn.devos.one/releases" }
+	maven { url = "https://libraries.minecraft.net" }
+	//cichlid.releases()
+	//minecraft.libraries()
+	//minecraft.versions()
+}
 
+configurations{
+	loader
 }
 
 dependencies {
-	//to change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	/*implementation(minecraft.of {
+		client()
+		version(project.minecraft_version)
+	})
+
+	compileOnly(cichlid.api(project.loader_version))
+	cichlidRuntime(cichlid.runtime(project.loader_version))*/
+
+	implementation 'fish.cichlidmc:cichlid:0.3.2'
+	loader 'fish.cichlidmc:cichlid:0.3.2'
 }
+
+minecraft {
+	version("1.21.5") // or: latestRelease() or latestSnapshot()
+	runs {
+		server() {
+			//jvmArgs("-javaagent:" + configurations.loader.resolvedConfiguration.files())
+		}
+		client() {
+			//jvmArgs("-javaagent:" + configurations.loader.resolvedConfiguration.files())
+		}
+	}
+}
+
+//cichlid {
+//	runs {
+//		register("client") {
+//			version = project.minecraft_version
+//		}
+//        register("client 1.21.4") {
+//            version = "1.21.4"
+//            template = "client"
+//        }
+
+//        register("serverButCooler") {
+//            template = "server"
+//            programArgs.get().remove("nogui")
+//            jvmArg("-Dmixin.debug.export=true")
+//        }
+//
+//        configureEach {
+//            version = minecraftVersion
+//            jvmArg("-Dmixin.debug.export=true")
+//        }
+//	}
+//}
 
 processResources {
 	inputs.property "version", project.version
 
-	filesMatching('fabric.mod.json') {
+	filesMatching('cichlid.mod.json') {
 		expand "version": project.version
 	}
 }
@@ -88,7 +141,7 @@ if (System.getenv("MODRINTH")) {
 		// On fabric, use 'remapJar' instead of 'jar'
 		uploadFile = remapJar
 		gameVersions = [((String) project.minecraft_version)]
-		loaders = ["fabric", "quilt"]
+		loaders = ["other"]
 	}
 
 	remapJar {

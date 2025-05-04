@@ -1,0 +1,15 @@
+{
+  "target": "net.minecraft.server.packs.repository.PackRepository",
+  "transforms": {
+    "type": "wrap_operation",
+    "method": "<init>",
+    "target": {
+    	"type": "invoke",
+    	"method": "com.google.common.collect.ImmutableSet.copyOf",
+    	"parameters": [
+            "[Ljava/lang/Object;"
+        ]
+    },
+    "wrapper": "eu.pb4.simpleresourceloader.mixin.ResourcePackManagerMixin.addCustomProvider"
+  }
+}

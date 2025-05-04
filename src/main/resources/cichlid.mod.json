@@ -1,0 +1,9 @@
+{
+  "name": "Simple Resource Loader",
+  "id": "simpleresourceloader",
+  "description": "Simple global/modpack resource pack and data pack loader. No configuration, just few folders.",
+  "version": "${version}",
+  "entrypoints": {
+    "pre_launch": "eu.pb4.simpleresourceloader.ModInit"
+  }
+}

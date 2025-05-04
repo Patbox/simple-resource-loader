@@ -1,34 +1,55 @@
 package eu.pb4.simpleresourceloader.mixin;
 
+import com.google.common.collect.ImmutableSet;
 import eu.pb4.simpleresourceloader.SimpleProvider;
-import net.minecraft.resource.ResourcePackManager;
-import net.minecraft.resource.ResourcePackProvider;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import fish.cichlidmc.sushi.api.transform.wrap_op.Operation;
+import net.minecraft.Util;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.BuiltInPackSource;
+import net.minecraft.server.packs.repository.RepositorySource;
+import net.minecraft.world.level.validation.DirectoryValidator;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 
-@Mixin(value = ResourcePackManager.class, priority = 600)
-public abstract class ResourcePackManagerMixin {
-	@Mutable
-	@Shadow @Final private Set<ResourcePackProvider> providers;
+//@Mixin(value = ResourcePackManager.class, priority = 600)
+public class ResourcePackManagerMixin {
+	private static final Field TYPE_GETTER;
+	private static final Field VALIDATOR_GETTER;
 
-	@Inject(method = "<init>", at = @At("RETURN"))
-	public void addCustomProvider(ResourcePackProvider[] resourcePackProviders, CallbackInfo info) {
+	public static ImmutableSet<RepositorySource> addCustomProvider(RepositorySource[] resourcePackProviders, Operation<ImmutableSet<RepositorySource>> operation) {
+		var arr = new ArrayList<>(List.of(resourcePackProviders));
+
 		for (var x : resourcePackProviders) {
-			if (x instanceof VanillaResourcePackProviderAccessor accessor) {
-				this.providers = new LinkedHashSet<>(this.providers);
-				this.providers.add(new SimpleProvider(accessor.getType(), accessor.getSymlinkFinder()));
-				return;
+			if (x instanceof BuiltInPackSource accessor) {
+                try {
+                    arr.add(new SimpleProvider((PackType) TYPE_GETTER.get(x), (DirectoryValidator) VALIDATOR_GETTER.get(x)));
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
+                break;
 			}
+		}
+
+		return operation.call(arr.toArray(RepositorySource[]::new));
+	}
+
+	static {
+		try {
+			var field = BuiltInPackSource.class.getField("packType");
+			field.setAccessible(true);
+			TYPE_GETTER = field;
+
+			field = BuiltInPackSource.class.getField("validator");
+			field.setAccessible(true);
+			VALIDATOR_GETTER = field;
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
 		}
 	}
 }
