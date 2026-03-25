@@ -1,10 +1,15 @@
 package eu.pb4.simpleresourceloader;
 
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.resource.*;
-import net.minecraft.text.Text;
-import net.minecraft.util.path.SymlinkFinder;
-
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackSelectionConfig;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.FolderRepositorySource;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.repository.RepositorySource;
+import net.minecraft.world.level.validation.DirectoryValidator;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,14 +17,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public record SimpleProvider(ResourceType type, SymlinkFinder symlinkFinder) implements ResourcePackProvider {
-    private static final ResourcePackPosition OPTIONAL_POSITION = new ResourcePackPosition(false, ResourcePackProfile.InsertionPosition.TOP, false);
-    private static final ResourcePackPosition REQUIRED_POSITION = new ResourcePackPosition(true, ResourcePackProfile.InsertionPosition.TOP, false);
+public record SimpleProvider(PackType type, DirectoryValidator symlinkFinder) implements RepositorySource {
+    private static final PackSelectionConfig OPTIONAL_POSITION = new PackSelectionConfig(false, Pack.Position.TOP, false);
+    private static final PackSelectionConfig REQUIRED_POSITION = new PackSelectionConfig(true, Pack.Position.TOP, false);
 
-    private static final ResourcePackSource SOURCE = ResourcePackSource.BUILTIN;
+    private static final PackSource SOURCE = PackSource.BUILT_IN;
 
     @Override
-    public void register(Consumer<ResourcePackProfile> profileAdder) {
+    public void loadPacks(Consumer<Pack> profileAdder) {
         for (var sided : List.of(true, false)) {
             var prefix = "srl_" + (sided ? switch (this.type) {
                 case SERVER_DATA -> "dp";
@@ -30,9 +35,9 @@ public record SimpleProvider(ResourceType type, SymlinkFinder symlinkFinder) imp
                 var basePath = getPath(sided ? this.type : null, required);
                 if (Files.exists(basePath)) {
                     try {
-                        FileResourcePackProvider.forEachProfile(basePath, symlinkFinder, (path, packFactory) -> {
-                            ResourcePackInfo resourcePackInfo = this.createPackInfo(path, prefix);
-                            ResourcePackProfile resourcePackProfile = ResourcePackProfile.create(resourcePackInfo, packFactory, this.type, position);
+                        FolderRepositorySource.discoverPacks(basePath, symlinkFinder, (path, packFactory) -> {
+                            PackLocationInfo resourcePackInfo = this.createPackInfo(path, prefix);
+                            Pack resourcePackProfile = Pack.readMetaAndCreate(resourcePackInfo, packFactory, this.type, position);
                             if (resourcePackProfile != null) {
                                 profileAdder.accept(resourcePackProfile);
                             }
@@ -49,11 +54,11 @@ public record SimpleProvider(ResourceType type, SymlinkFinder symlinkFinder) imp
         return path.getFileName().toString();
     }
 
-    private ResourcePackInfo createPackInfo(Path path, String prefix) {
+    private PackLocationInfo createPackInfo(Path path, String prefix) {
         String string = getFileName(path);
-        return new ResourcePackInfo( prefix + "/" + string, Text.literal(string), SOURCE, Optional.empty());
+        return new PackLocationInfo( prefix + "/" + string, Component.literal(string), SOURCE, Optional.empty());
     }
-    public static Path getPath(ResourceType type, boolean required) {
+    public static Path getPath(PackType type, boolean required) {
         var str = switch (type) {
             case SERVER_DATA -> "datapack";
             case CLIENT_RESOURCES -> "resourcepack";

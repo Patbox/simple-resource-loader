@@ -1,16 +1,16 @@
 package eu.pb4.simpleresourceloader.mixin;
 
-import net.minecraft.resource.ResourceType;
-import net.minecraft.resource.VanillaResourcePackProvider;
-import net.minecraft.util.path.SymlinkFinder;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.BuiltInPackSource;
+import net.minecraft.world.level.validation.DirectoryValidator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(VanillaResourcePackProvider.class)
+@Mixin(BuiltInPackSource.class)
 public interface VanillaResourcePackProviderAccessor {
     @Accessor
-    ResourceType getType();
+    PackType getPackType();
 
     @Accessor
-    SymlinkFinder getSymlinkFinder();
+    DirectoryValidator getValidator();
 }
